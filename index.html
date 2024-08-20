@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集中力</title>
+<style>
+    body
+    {
+        background-color: #0d0015;
+        /*height: 80vh; ビューポートの高さに合わせる */
+
+        display: flex;
+        flex-direction: column; /* 縦に並べる */
+        align-items: center; /* 横方向に中央揃え */
+        justify-content: center; /* 縦方向に中央揃え */
+    }
+    .timer
+    {
+        visibility:hidden; /* 非表示にする */
+        color: #fff; /* 文字色 */
+        font-size: 24px;
+        position: absolute;
+        top: 5%;
+    }
+
+    #all_canvas
+    {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        width: 95%;
+        height: auto;
+        column-gap: 3px; /* 列間のマージン */
+        row-gap: 3px;  /*行間のマージン */
+        /*margin-left: 5%;右に10px移動 */
+        margin-top: 100px; /* 下に100px移動 */
+    }
+    .target
+    {
+        font-size: 24px;
+        text-align: center;
+        color: #000000; /* 文字色 */
+        cursor: pointer;
+        background-Color : rgb(104, 187, 255);
+    }
+    .target:hover
+    {
+        background-color: rgb(0, 109, 177);
+    }
+
+    #start
+    {
+        cursor: pointer;
+        padding: 15px 30px;
+        font-size: 24px; /* ボタンの文字を大きくする */
+        background-color: #007bff; /* 背景色 */
+        color: #fff; /* 文字色 */
+        border: none; /* ボーダーを消す */
+        border-radius: 5px; /* ボタンの角を丸くする */
+        transition: background-color 0.3s; /* 背景色の変化をスムーズにする */
+        position: absolute; /* ボタンを絶対位置に設定 */
+        top: 30%; /* 縦方向中央 */
+        left: 44%; /* 横方向中央 */
+    }
+
+    #restart
+    {
+        cursor: pointer;
+        padding: 15px 30px;
+        font-size: 24px; /* ボタンの文字を大きくする */
+        background-color: #007bff; /* 背景色 */
+        color: #fff; /* 文字色 */
+        border: none; /* ボーダーを消す */
+        border-radius: 5px; /* ボタンの角を丸くする */
+        transition: background-color 0.3s; /* 背景色の変化をスムーズにする */
+        position: absolute; /* ボタンを絶対位置に設定 */
+        top: 20%; /* 縦方向中央 */
+        left: 44%; /* 横方向中央 */
+        display: none;
+    }
+
+</style>
+<script>
+
+    let answer_count = 1;
+    let numbers = [];
+    let startTime = null;
+    let intervalId;
+    let target_count = 200;
+
+    function start()
+    {
+        startTime = new Date;
+        intervalId = setInterval(game_tick, 300);
+        var a = document.getElementById('start')
+        if(a)
+        {
+            a.style.display = 'none'; // ボタンを非表示にする
+        }
+        var a = document.getElementById('restart')
+        if(a)
+        {
+            a.style.display = 'none'; // ボタンを非表示にする
+        }
+        var ti = document.getElementById('timer');
+        ti.style.visibility = 'visible';
+        var targetCanvas = document.getElementById('all_canvas');
+        numbers=[];//初期化
+        answer_count = 1;//初期化
+        // 1から99までの数値を配列に格納
+        numbers = Array.from({ length: target_count }, (_, i) => i + 1);
+        // 配列をシャッフル
+        numbers = shuffleArray(numbers);
+        // シャッフルされた数値でdivを生成
+        numbers.forEach(num =>
+        {
+            var div = document.createElement('div');
+            div.textContent = `${num}`;
+            div.id = `target${num}`; // IDを設定する
+            div.className = 'target'; // クラス名を設定する
+            targetCanvas.appendChild(div);
+            if(num==1)
+            {
+                div.addEventListener('click', function()
+                {
+                    answer();
+                });
+            }
+        });
+
+    };
+
+    function answer()
+    {
+        var div = document.getElementById(`target${answer_count}`);
+        div.style.visibility = 'hidden';
+        answer_count += 1;
+        var div = document.getElementById(`target${answer_count}`);
+        if(div && answer_count!=target_count)//1~98個はこれ
+        {
+            div.addEventListener('click', function()
+            {
+                answer();
+            });
+        }else{//99個目はこれ
+            div.addEventListener('click', function()
+            {
+                clearInterval(intervalId);
+
+                var div = document.getElementById('restart');
+                div.style.display = 'block'; // ボタンを非表示にする
+
+                var div = document.getElementById(`target${answer_count}`);
+                div.style.visibility = 'hidden';
+
+                var ttt = document.getElementById('timer');
+                //ttt.style.position = 'absolute';
+                ttt.style.top = '50%';
+
+                // div要素を150%に拡大
+                ttt.style.transform = 'scale(2)';
+                ttt.style.textShadow = `
+                                            1px 1px 0 #f00,
+                                            -1px -1px 0 #f00,
+                                            1px -1px 0 #f00,
+                                            -1px 1px 0 #f00
+                                        `;
+            });
+        }
+    };
+
+    function game_tick()
+    {
+        let now = new Date();
+        timer_time = Math.floor(now.getTime() - startTime.getTime());
+        let totalSeconds = Math.floor((timer_time/1000));
+        // 分と秒を計算
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+
+        // ゼロパディング
+        minutes = minutes.toString().padStart(2, '0');
+        seconds = seconds.toString().padStart(2, '0');
+
+        // 経過時間を表示
+        document.getElementById('time').textContent = `${minutes}:${seconds}`;
+        if(totalSeconds>10000)
+        {
+            clearInterval(intervalId);
+        }
+    };
+
+    function restart()
+    {
+        var b = document.getElementById('all_canvas');
+        b.remove();
+        var div = document.createElement('div');
+        div.id = 'all_canvas'; // クラス名を設定する
+        document.body.appendChild(div);
+        var ttt = document.getElementById('timer');
+        ttt.style.position = 'absolute';
+        // スタイルを設定して中央に移動
+        ttt.style.top = '5%';
+        ttt.style.transform = 'scale(0.9)';
+        ttt.style.removeProperty('text-shadow');
+        start();
+    };
+
+    function shuffleArray(array)
+    {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]]; // ES6の分割代入で交換
+        }
+        return array;
+    };
+
+</script>
+</head>
+<body>
+    <div class="timer" id="timer"><span id="time">00:00</span></div>
+    <button id="start" onclick="start()">start</button>
+    <button id="restart" onclick="restart()">restart?</button>
+    <div id="all_canvas"></div>
+</body>
+</html>
